@@ -14,6 +14,41 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_MODEL = 'gpt-5.2';
 const DEFAULT_MAX_TOKENS = 8192;
 
+// --- GIGACHAT AUTH HELPER ---
+let cachedGigaToken: string | null = null;
+let gigaTokenExpiry: number = 0;
+
+async function getGigaChatToken(authKey: string): Promise<string> {
+  const now = Date.now();
+  // Если токен есть и до его истечения больше 1 минуты, используем его
+  if (cachedGigaToken && now < gigaTokenExpiry - 60000) {
+    return cachedGigaToken;
+  }
+
+  const response = await fetch('https://ngw.devices.sberbank.ru:9443/api/v2/oauth', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Accept': 'application/json',
+      'RqUID': '6f0b1291-b6c9-4d5c-8e3a-8c5d4e4f7b6a', // Случайный UUID
+      'Authorization': `Basic ${authKey}`
+    },
+    body: 'scope=GIGACHAT_API_PERS' // Для физических лиц
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`GigaChat Auth Error: ${response.status} - ${err}`);
+  }
+
+  const data = await response.json();
+  cachedGigaToken = data.access_token;
+  gigaTokenExpiry = data.expires_at; // Время истечения в мс
+  
+  return cachedGigaToken!;
+}
+// ----------------------------
+
 export class OpenAIProvider implements LLMProvider {
   private apiKey: string;
   private defaultModel: string;
@@ -33,6 +68,14 @@ export class OpenAIProvider implements LLMProvider {
     return this.defaultModel;
   }
 
+  /** Вспомогательный метод для получения правильного ключа (обычный или GigaChat) */
+  private async getAuthKey(): Promise<string> {
+    if (this.baseUrl.includes('giga.chat')) {
+      return await getGigaChatToken(this.apiKey);
+    }
+    return this.apiKey;
+  }
+
   /** Test the connection by sending a minimal request */
   async testConnection(): Promise<{
     success: boolean;
@@ -40,11 +83,13 @@ export class OpenAIProvider implements LLMProvider {
     response?: string;
   }> {
     try {
+      const actualKey = await this.getAuthKey();
+
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${actualKey}`,
         },
         body: JSON.stringify({
           model: this.defaultModel,
@@ -160,11 +205,14 @@ export class OpenAIProvider implements LLMProvider {
       body.temperature = options.temperature;
     }
 
+    // Получаем актуальный токен перед запросом
+    const actualKey = await this.getAuthKey();
+
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${actualKey}`,
       },
       body: JSON.stringify(body),
     });
