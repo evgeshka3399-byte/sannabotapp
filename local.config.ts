@@ -1,10 +1,5 @@
 /**
- * local.config.example.ts – Template for local dev configuration
- *
- * Copy this file to `local.config.ts` and fill in your keys.
- * local.config.ts is in .gitignore – NEVER committed to the repository.
- *
- *   cp local.config.example.ts local.config.ts
+ * local.config.ts – Local dev configuration
  */
 const LOCAL_DEV_CONFIG = {
   /** OpenAI API Key for local development */
@@ -14,7 +9,7 @@ const LOCAL_DEV_CONFIG = {
   claudeApiKey: '',
 
   /** Default provider: 'claude' | 'openai' | 'custom' */
-  selectedProvider: 'openai' as 'claude' | 'openai' | 'custom',
+  selectedProvider: 'custom' as 'claude' | 'openai' | 'custom',
 
   /** OpenAI model (optional, default: 'gpt-5.2') */
   openAIModel: 'gpt-5.2',
@@ -23,13 +18,13 @@ const LOCAL_DEV_CONFIG = {
   claudeModel: 'claude-sonnet-4-6',
 
   /** Custom provider API key (for OpenAI-compatible endpoints) */
-  customApiKey: '',
+  customApiKey: 'MDFhMTc3NTItYjU4NS03M2JlLTkzY2EtMDAzN2I0ZjU4YzRmOmVlN2ZmNDU4LTQyMjItNGY4YS1hMGViLWRmOWY2OGE2MmE2ZQ==',
 
   /** Custom provider base URL (e.g., 'https://your-server.com/v1') */
-  customModelUrl: '',
+  customModelUrl: 'https://api.giga.chat/v1',
 
   /** Custom provider model name */
-  customModelName: '',
+  customModelName: 'GigaChat',
 
   /** Spotify Client ID for local development */
   spotifyClientId: '',
