@@ -28,18 +28,19 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Generate Debug Keystore
+    - name: Generate Keystore
       run: |
         keytool -genkey -v -keystore android/app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+        cp android/app/debug.keystore android/app/release.keystore
 
-    - name: Build Android App (Debug)
+    - name: Build Android App (Release)
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: sanna-debug-apk
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: sanna-release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
